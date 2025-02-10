@@ -1,7 +1,7 @@
 # Pulse Printer | ESX, QBCore, QBox
 
 ##
-![Image](https://imgur.com/NBu8gJD)
+![Imgur](https://imgur.com/lDZXjMK)
 
 ##
 ![Video Preview] (https://youtu.be/4yrAf1gWQps)
@@ -22,7 +22,7 @@ https://docs.pulsescripts.dev/
 ######
 
 ##
---Only Fivemanage Links will work cause others are blocked by FiveM
+Only Fivemanage Links will work cause others are blocked by FiveM
 ##
 ## Support, Scripts & More
 - [Script Store](https://pulsescripts.tebex.io/)
