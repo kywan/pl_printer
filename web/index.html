@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <title></title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #image {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            max-height: 90%;
+        }
+    </style>
+</head>
+<body>
+    <img id="image" src="" alt="Image" style="display:none;">
+    <script>
+        window.addEventListener('message', function(event) {
+            if (event.data.action === 'show') {
+                document.getElementById('image').src = event.data.imageUrl;
+                document.getElementById('image').style.display = 'block';
+            } else if (event.data.action === 'hide') {
+                document.getElementById('image').style.display = 'none';
+            }
+        });
+
+        document.addEventListener("keydown", function(event) {
+        if (event.key === "Escape") {
+            document.getElementById('image').style.display = 'none';
+            axios.post(`https://${GetParentResourceName()}/hideFrame`, {})
+            .then(function (response) { 
+            })
+            .catch(function (error) {
+            });
+        }
+});
+    </script>
+</body>
+</html>

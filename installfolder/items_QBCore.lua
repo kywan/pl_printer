@@ -1,0 +1,1 @@
+['paper'] = {['name'] = 'paper', ['label'] = 'Paper', ['weight'] = 10, ['type'] = 'item', ['image'] = 'paper.png', ['unique'] = true, ['useable'] = true, ['shouldClose'] = true, ['combinable'] = nil, ['description'] = 'A Photo Copy Print'},
