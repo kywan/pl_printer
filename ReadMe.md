@@ -1,7 +1,7 @@
 # Pulse Printer | ESX, QBCore, QBox
 
 ##
-![Imgur](https://imgur.com/lDZXjMK)
+![Image](https://i.imgur.com/r9ErEkc.png)
 
 ##
 ![Video Preview] (https://youtu.be/4yrAf1gWQps)
