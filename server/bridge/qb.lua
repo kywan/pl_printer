@@ -33,7 +33,11 @@ function GetPlayerAccountMoney(Player,account,TotalBill)
 end
 
 function HasItem(playerSource)
-    return exports['qb-inventory']:HasItem(playerSource,Config.ItemName,1) 
+    if Config.CheckItem then
+        return exports['qb-inventory']:HasItem(playerSource,Config.ItemName,1)
+    else
+        return true
+    end
 end
 
 function AddItemQB(Player,amount, imageName)
@@ -45,13 +49,13 @@ function AddItemQB(Player,amount, imageName)
         exports['qb-inventory']:AddItem(source,Config.ItemName,amount,false,info)
         TriggerClientEvent('qb-inventory:client:ItemBox', source, QBCore.Shared.Items[Config.ItemName], 'add', amount)
     else
-        Player.Functions.AddItem(Config.ItemName, amount)
+        Player.Functions.AddItem(Config.ItemName, amount,false, info)
         TriggerClientEvent('inventory:client:ItemBox', source, QBCore.Shared.Items[Config.ItemName], "add")
     end
 end
 
-QBCore.Functions.CreateUseableItem(Config.ItemName, function(source, item)
+QBCore.Functions.CreateUseableItem(Config.ItemName, function(source)
     local Player = QBCore.Functions.GetPlayer(source)
-    local item = exports['qb-inventory']:GetItemByName(source, Config.ItemName)
+    local item = Player.Functions.GetItemByName(Config.ItemName)
     TriggerEvent('pl_printer:fetchImageLink',item.info.id,Player.PlayerData.source)
 end)

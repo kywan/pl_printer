@@ -33,14 +33,18 @@ function GetPlayerAccountMoney(Player,account,TotalBill)
 end
 
 function HasItem(playerSource)
-    local xPlayer = ESX.GetPlayerFromId(playerSource)
-    if not xPlayer then return false end
+    if Config.CheckItem then
+        local xPlayer = ESX.GetPlayerFromId(playerSource)
+        if not xPlayer then return false end
 
-    local item = xPlayer.getInventoryItem(Config.ItemName)
-    if item and item.count >= 1 then
-        return true
+        local item = xPlayer.getInventoryItem(Config.ItemName)
+        if item and item.count >= 1 then
+            return true
+        else
+            return false
+        end
     else
-        return false
+        return true
     end
 end
 

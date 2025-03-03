@@ -2,9 +2,9 @@ fx_version 'cerulean'
 games { 'gta5' }
 lua54 'yes'
 
-name 'Pulse Printers'
+name 'Printers'
 author 'PulseScripts'
-version '1.0.1'
+version '1.0.2'
 
 ui_page 'web/index.html'
 

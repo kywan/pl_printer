@@ -6,6 +6,7 @@ Config.Debug = false
 
 Config.Notify = 'ox' --ox, esx, okok,qb,wasabi,custom
 
+Config.CheckItem = false --If you want player to have item before opening
 
 Config.PrinterModel = {`prop_printer_02`,`prop_printer_01`}
 
