@@ -50,7 +50,8 @@ function AddItem(Player, amount, imageName)
     elseif GetResourceState('ox_inventory') == 'started' then
         exports.ox_inventory:AddItem(src,Config.ItemName,amount,imageName,false)
     elseif GetResourceState('qs-inventory') == 'started' then
-        exports['qs-inventory']:AddItem(src,Config.ItemName,amount,false,imageName)
+    local itemMetadata ={ id = imageName }
+        exports['qs-inventory']:AddItem(source,Config.ItemName,amount,false,itemMetadata)
     end
 end
 
