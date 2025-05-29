@@ -59,8 +59,8 @@ RegisterNetEvent("pl_printer:openprinter")
 AddEventHandler("pl_printer:openprinter", function()
 
     local input = lib.inputDialog('Print Menu', {
-        {type = 'input', label = 'Image Link', description = 'Enter the Image URL', required = true},
-        {type = 'number', label = 'Copies', description = 'Enter the number of copies',required = true,placeholder='1', icon = 'hashtag'},
+        {type = 'input', label = Locale("image_link"), description = Locale("image_url"), required = true},
+        {type = 'number', label = Locale("copies"), description = Locale("image_url"),required = true,placeholder='1', icon = 'hashtag'},
         
     })
     if input then
@@ -78,7 +78,7 @@ for _, model in ipairs(Config.PrinterModel) do
             options = {
                 {
                     icon = 'fa-solid fa-print',
-                    label = 'Prints',
+                    label = Locale("prints"),
                     action = function(data)
                         TriggerEvent('pl_printer:openprinter')
                     end,
@@ -90,7 +90,7 @@ for _, model in ipairs(Config.PrinterModel) do
         exports.ox_target:addModel(model, {
             {
                 name = 'printer_interaction',
-                label = 'Prints',
+                label = Locale("prints"),
                 icon = 'fa-solid fa-print',
                 onSelect = function(data)
                     TriggerEvent('pl_printer:openprinter')

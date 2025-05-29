@@ -3,8 +3,8 @@ local QBCore = GetResourceState('qb-core'):find('start') and exports['qb-core']:
 if not QBCore then return end
 
 function getPlayer(target)
-    local xPlayer = QBCore.Functions.GetPlayer(target)
-    return xPlayer
+    local Player = QBCore.Functions.GetPlayer(target)
+    return Player
 end
 
 function RemovePlayerMoney(Player,account,TotalBill)
@@ -37,20 +37,6 @@ function HasItem(playerSource)
         return exports['qb-inventory']:HasItem(playerSource,Config.ItemName,1)
     else
         return true
-    end
-end
-
-function AddItemQB(Player,amount, imageName)
-    local source = Player.PlayerData.source
-    local info = {
-        id = imageName
-    }
-    if lib.checkDependency('qb-inventory', '2.0.0') then
-        exports['qb-inventory']:AddItem(source,Config.ItemName,amount,false,info)
-        TriggerClientEvent('qb-inventory:client:ItemBox', source, QBCore.Shared.Items[Config.ItemName], 'add', amount)
-    else
-        Player.Functions.AddItem(Config.ItemName, amount,false, info)
-        TriggerClientEvent('inventory:client:ItemBox', source, QBCore.Shared.Items[Config.ItemName], "add")
     end
 end
 

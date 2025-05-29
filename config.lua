@@ -1,6 +1,8 @@
-lib.locale()
+
 
 Config = {}
+
+Config.Locale = 'en' -- 'en', 'fr', 'de', 'es', 'it', 'pt', 'tr' -- Language
 
 Config.Debug = false
 

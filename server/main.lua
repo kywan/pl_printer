@@ -1,4 +1,8 @@
-
+if GetResourceState('qb-core') == 'started' then
+QBCore = exports['qb-core']:GetCoreObject()
+elseif GetResourceState('es_extended') == 'started' then
+ESX = exports['es_extended']:getSharedObject()
+end
 local resourceName = 'pl_printer'
 lib.versionCheck('pulsepk/pl_printer')
 
@@ -9,7 +13,7 @@ AddEventHandler('pl_printer:insertImageData', function(imageUrl, amount)
     local TotalBill = Config.Print.Price*amount
     if GetPlayerAccountMoney(Player,account,TotalBill) then
         local imageName = imageUrl:match(".*/(.*)$")
-        AddItem(Player,amount, imageName)
+        AddItem(source,amount, imageName)
         if imageUrl and amount then
             MySQL.Async.execute('INSERT INTO printer (image_name, image_link) VALUES (@image_name, @image_link)', {
                 ['@image_name'] = tostring(imageName),
@@ -18,12 +22,12 @@ AddEventHandler('pl_printer:insertImageData', function(imageUrl, amount)
                 
             end)
             RemovePlayerMoney(Player,account,TotalBill)
-            TriggerClientEvent('pl_printer:notification',source,'Money removed from bank: $' .. TotalBill,'success')
+            TriggerClientEvent('pl_printer:notification',source,Locale("Money_Removed") .. TotalBill,'success')
         else
             _debug('[DEBUG] '..' Invalid data received for image. '..'')
         end
     else
-        TriggerClientEvent('pl_printer:notification',source,'Not enough money','error')
+        TriggerClientEvent('pl_printer:notification',source,Locale("not_enough"),'error')
     end
 end)
 
@@ -43,15 +47,25 @@ AddEventHandler('pl_printer:fetchImageLink', function(imageName,playerSource)
     end)
 end)
 
-function AddItem(Player, amount, imageName)
-    local src = Player.source
+function AddItem(source, amount, imageName)
+    local src = source
+    local info = {
+        id = imageName
+    }
     if GetResourceState('qb-inventory') == 'started' then
-        AddItemQB(Player,amount, imageName)
+        if lib.checkDependency('qb-inventory', '2.0.0') then
+            exports['qb-inventory']:AddItem(src,Config.ItemName,amount,false,info)
+            TriggerClientEvent('qb-inventory:client:ItemBox', src, QBCore.Shared.Items[Config.ItemName], 'add', amount)
+        else
+            local Player = getPlayer(src)
+            Player.Functions.AddItem(Config.ItemName, amount,false, info)
+            TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[Config.ItemName], "add")
+        end
     elseif GetResourceState('ox_inventory') == 'started' then
         exports.ox_inventory:AddItem(src,Config.ItemName,amount,imageName,false)
     elseif GetResourceState('qs-inventory') == 'started' then
-    local itemMetadata ={ id = imageName }
-        exports['qs-inventory']:AddItem(source,Config.ItemName,amount,false,itemMetadata)
+        local itemMetadata ={ id = imageName }
+        exports['qs-inventory']:AddItem(src,Config.ItemName,amount,false,itemMetadata)
     end
 end
 

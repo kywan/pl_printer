@@ -2,15 +2,16 @@ fx_version 'cerulean'
 games { 'gta5' }
 lua54 'yes'
 
-name 'Printers'
+name 'Printer Script'
 author 'PulseScripts'
-version '1.0.3'
+version '1.0.4'
 
 ui_page 'web/index.html'
 
 shared_scripts {
     '@ox_lib/init.lua',
-    'config.lua'
+    'config.lua',
+    'locales/locale.lua'
 }
 
 client_scripts {
@@ -29,5 +30,5 @@ dependencies {
 
 files {
     'web/index.html',
-    'locales/en.json'
+    'locales/*.json'
 }

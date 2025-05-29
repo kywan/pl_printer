@@ -1,0 +1,9 @@
+{
+    "image_link": "Lien de l'image",
+    "copies": "Copies",
+    "image_url": "Entrez l'URL de l'image",
+    "enter_copies": "Entrez le nombre de copies",
+    "prints": "Impressions",
+    "Money_Removed": "Argent retiré de la banque : $",
+    "not_enough": "Pas assez d'argent"
+  }
