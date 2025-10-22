@@ -1,4 +1,5 @@
 {
+    "print_menu": "🖨️ Print Menu",
     "image_link": "Image Link",
     "copies": "Copies",
     "image_url": "Enter the Image URL",
@@ -6,5 +7,4 @@
     "prints": "Prints",
     "Money_Removed": "Money removed from bank: $",
     "not_enough": "Not enough money"
-
 }
