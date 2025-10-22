@@ -55,22 +55,50 @@ RegisterNUICallback('hideFrame', function(data, cb)
     enableControls()
 end)
 
-RegisterNetEvent("pl_printer:openprinter")
-AddEventHandler("pl_printer:openprinter", function()
+function showInputDialog(title, options, submitText)
+    if Config.InputDialog == 'ox_lib' then
+        return lib.inputDialog(title, options)
+    elseif Config.InputDialog == 'lation_ui' then
+        return exports.lation_ui:input({
+            title = title,
+            submitText = submitText,
+            options = options
+        })
+    end
+end
 
-    local input = lib.inputDialog('Print Menu', {
-        {type = 'input', label = Locale("image_link"), description = Locale("image_url"), required = true},
-        {type = 'number', label = Locale("copies"), description = Locale("image_url"),required = true,placeholder='1', icon = 'hashtag'},
-        
-    })
-    if input then
-        if input[1] and input[2] then
-            TriggerServerEvent('pl_printer:insertImageData', input[1], input[2])
-        else
-            _debug('[DEBUG] '..'Invalid Input'..'')
-        end
+RegisterNetEvent("pl_printer:openprinter", function()
+    local input = showInputDialog(Locale("print_menu"), {
+        {
+            type = 'input',
+            label = Locale("image_link"),
+            description = Locale("image_url"),
+            required = true
+        },
+        {
+            type = 'number',
+            label = Locale("copies"),
+            description = Locale("enter_copies"),
+            required = true,
+            placeholder = '1',
+            icon = 'hashtag'
+        }
+    }, Locale("submit"))
+
+    if not input then
+        _debug('[DEBUG] No input received')
+        return
+    end
+
+    local imageLink, copies = input[1], input[2]
+
+    if imageLink and copies then
+        TriggerServerEvent('pl_printer:insertImageData', imageLink, copies)
+    else
+        _debug('[DEBUG] Invalid input values')
     end
 end)
+
 
 for _, model in ipairs(Config.PrinterModel) do
     if GetResourceState('qb-target') == 'started' then
