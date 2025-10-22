@@ -1,7 +1,7 @@
 if GetResourceState('qb-core') == 'started' then
-QBCore = exports['qb-core']:GetCoreObject()
+    QBCore = exports['qb-core']:GetCoreObject()
 elseif GetResourceState('es_extended') == 'started' then
-ESX = exports['es_extended']:getSharedObject()
+    ESX = exports['es_extended']:getSharedObject()
 end
 local resourceName = 'pl_printer'
 lib.versionCheck('pulsepk/pl_printer')
@@ -63,9 +63,6 @@ function AddItem(source, amount, imageName)
         end
     elseif GetResourceState('ox_inventory') == 'started' then
         exports.ox_inventory:AddItem(src,Config.ItemName,amount,imageName,false)
-    elseif GetResourceState('qs-inventory') == 'started' then
-        local itemMetadata ={ id = imageName }
-        exports['qs-inventory']:AddItem(src,Config.ItemName,amount,false,itemMetadata)
     end
 end
 
