@@ -6,5 +6,11 @@
     "enter_copies": "Anzahl der Kopien eingeben",
     "prints": "Drucke",
     "Money_Removed": "Geld vom Bankkonto entfernt: $",
-    "not_enough": "Nicht genug Geld"
-  }
+    "not_enough": "Nicht genug Geld",
+    "invalid_copies": "Gib eine gültige Anzahl an Kopien ein",
+    "invalid_file_type": "Dateityp wird nicht unterstützt",
+    "invalid_file_data": "Bilddaten konnten nicht verarbeitet werden",
+    "file_too_large": "Die ausgewählte Datei ist zu groß",
+    "image_missing": "Gespeicherte Bilddaten wurden nicht gefunden",
+    "invalid_image_item": "Dieser Ausdruck hat kein Bild mehr verknüpft"
+}

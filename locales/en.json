@@ -6,5 +6,11 @@
     "enter_copies": "Enter the number of copies",
     "prints": "Prints",
     "Money_Removed": "Money removed from bank: $",
-    "not_enough": "Not enough money"
+    "not_enough": "Not enough money",
+    "invalid_copies": "Enter a valid number of copies",
+    "invalid_file_type": "Unsupported file type",
+    "invalid_file_data": "Image data could not be processed",
+    "file_too_large": "Selected file is too large",
+    "image_missing": "Unable to find the stored image data",
+    "invalid_image_item": "This print no longer has an image attached"
 }
