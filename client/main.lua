@@ -2,6 +2,15 @@
 local spawnedObjects = {}
 
 local imageDisplayed = false
+local uploadOpen = false
+
+local MAX_UPLOAD_SIZE = 2 * 1024 * 1024 -- 2MB default limit
+local ALLOWED_MIME_TYPES = {
+    ['image/png'] = true,
+    ['image/jpeg'] = true,
+    ['image/jpg'] = true,
+    ['image/webp'] = true
+}
 
 RegisterNetEvent('pl_printer:notification')
 AddEventHandler('pl_printer:notification', function(message, type)
@@ -31,72 +40,93 @@ function enableControls()
     FreezeEntityPosition(PlayerPedId(), false)
 end
 
-RegisterNetEvent("pl_printer:showImageQB")
-AddEventHandler("pl_printer:showImageQB", function(imageName)
-    TriggerServerEvent('pl_printer:fetchImageLink',imageName)
-end)
-
 RegisterNetEvent("pl_printer:showImage")
 AddEventHandler("pl_printer:showImage", function(imageName)
     if not imageDisplayed then
         imageDisplayed = true
-        SetNuiFocus(true, true) 
+        SetNuiFocus(true, true)
         SendNUIMessage({
             action = "show",
             imageUrl = imageName
         })
         disableControls()
     end
-end) 
+end)
 
 RegisterNUICallback('hideFrame', function(data, cb)
     imageDisplayed = false
     SetNuiFocus(false, false)
     enableControls()
+    cb({ success = true })
 end)
 
-function showInputDialog(title, options, submitText)
-    if Config.InputDialog == 'ox_lib' then
-        return lib.inputDialog(title, options)
-    elseif Config.InputDialog == 'lation_ui' then
-        return exports.lation_ui:input({
-            title = title,
-            submitText = submitText,
-            options = options
-        })
-    end
-end
-
 RegisterNetEvent("pl_printer:openprinter", function()
-    local input = showInputDialog(Locale("print_menu"), {
-        {
-            type = 'input',
-            label = Locale("image_link"),
-            description = Locale("image_url"),
-            required = true
-        },
-        {
-            type = 'number',
-            label = Locale("copies"),
-            description = Locale("enter_copies"),
-            required = true,
-            placeholder = '1',
-            icon = 'hashtag'
-        }
-    }, Locale("submit"))
+    if uploadOpen then return end
 
-    if not input then
-        _debug('[DEBUG] No input received')
+    uploadOpen = true
+    SetNuiFocus(true, true)
+    SendNUIMessage({
+        action = "openUpload"
+    })
+    disableControls()
+end)
+
+
+RegisterNUICallback('closeUpload', function(_, cb)
+    uploadOpen = false
+    SetNuiFocus(false, false)
+    enableControls()
+    SendNUIMessage({ action = "closeUpload" })
+    cb({ success = true })
+end)
+
+RegisterNUICallback('uploadImage', function(data, cb)
+    if type(data) ~= 'table' then
+        cb({ success = false, error = 'invalid_payload' })
         return
     end
 
-    local imageLink, copies = input[1], input[2]
+    local copies = tonumber(data.copies or 0) or 0
+    copies = math.floor(copies)
+    local mimeType = tostring(data.mimeType or '')
+    local base64Data = tostring(data.base64Data or '')
+    local fileSize = tonumber(data.fileSize or 0) or 0
+    local fileName = tostring(data.fileName or '')
 
-    if imageLink and copies then
-        TriggerServerEvent('pl_printer:insertImageData', imageLink, copies)
-    else
-        _debug('[DEBUG] Invalid input values')
+    if copies < 1 then
+        TriggerEvent('pl_printer:notification', Locale("invalid_copies"), 'error')
+        cb({ success = false, error = 'invalid_copies' })
+        return
     end
+
+    if fileSize <= 0 or fileSize > MAX_UPLOAD_SIZE then
+        TriggerEvent('pl_printer:notification', Locale("file_too_large"), 'error')
+        cb({ success = false, error = 'invalid_size' })
+        return
+    end
+
+    if not ALLOWED_MIME_TYPES[mimeType] then
+        TriggerEvent('pl_printer:notification', Locale("invalid_file_type"), 'error')
+        cb({ success = false, error = 'invalid_type' })
+        return
+    end
+
+    if base64Data == '' then
+        TriggerEvent('pl_printer:notification', Locale("invalid_file_data"), 'error')
+        cb({ success = false, error = 'invalid_data' })
+        return
+    end
+
+    local imageId = ('pl_img_%s_%s'):format(os.time(), math.random(1000, 9999))
+
+    TriggerServerEvent('pl_printer:insertImageData', imageId, mimeType, base64Data, copies, fileName)
+
+    uploadOpen = false
+    SetNuiFocus(false, false)
+    enableControls()
+    SendNUIMessage({ action = "closeUpload" })
+
+    cb({ success = true })
 end)
 
 
@@ -114,7 +144,7 @@ for _, model in ipairs(Config.PrinterModel) do
             },
             distance = 2
         })
-    elseif GetResourceState('qtarget') == 'started' or GetResourceState('ox_target') == 'started'then
+    elseif GetResourceState('qtarget') == 'started' or GetResourceState('ox_target') == 'started' then
         exports.ox_target:addModel(model, {
             {
                 name = 'printer_interaction',

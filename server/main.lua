@@ -7,27 +7,57 @@ local resourceName = 'pl_printer'
 lib.versionCheck('pulsepk/pl_printer')
 
 RegisterServerEvent('pl_printer:insertImageData')
-AddEventHandler('pl_printer:insertImageData', function(imageUrl, amount)
+AddEventHandler('pl_printer:insertImageData', function(imageId, mimeType, imageData, amount, originalName)
     local Player = getPlayer(source)
     local account = Config.Print.Account
-    local TotalBill = Config.Print.Price*amount
-    if GetPlayerAccountMoney(Player,account,TotalBill) then
-        local imageName = imageUrl:match(".*/(.*)$")
-        AddItem(source,amount, imageName)
-        if imageUrl and amount then
-            MySQL.Async.execute('INSERT INTO printer (image_name, image_link) VALUES (@image_name, @image_link)', {
-                ['@image_name'] = tostring(imageName),
-                ['@image_link'] = imageUrl
-            }, function(rowsChanged)
-                
-            end)
-            RemovePlayerMoney(Player,account,TotalBill)
-            TriggerClientEvent('pl_printer:notification',source,Locale("Money_Removed") .. TotalBill,'success')
-        else
-            _debug('[DEBUG] '..' Invalid data received for image. '..'')
-        end
+
+    if not Player then
+        TriggerClientEvent('pl_printer:notification', source, Locale("invalid_image_item"), 'error')
+        return
+    end
+
+    if type(imageId) ~= 'string' or imageId == '' then
+        TriggerClientEvent('pl_printer:notification', source, Locale("invalid_file_data"), 'error')
+        return
+    end
+
+    if type(imageData) ~= 'string' or imageData == '' then
+        TriggerClientEvent('pl_printer:notification', source, Locale("invalid_file_data"), 'error')
+        return
+    end
+
+    if type(mimeType) ~= 'string' or mimeType == '' then
+        TriggerClientEvent('pl_printer:notification', source, Locale("invalid_file_type"), 'error')
+        return
+    end
+
+    if type(amount) ~= 'number' then
+        TriggerClientEvent('pl_printer:notification', source, Locale("invalid_copies"), 'error')
+        return
+    end
+
+    amount = math.floor(amount)
+
+    if amount < 1 then
+        TriggerClientEvent('pl_printer:notification', source, Locale("invalid_copies"), 'error')
+        return
+    end
+
+    local TotalBill = Config.Print.Price * amount
+
+    if GetPlayerAccountMoney(Player, account, TotalBill) then
+        AddItem(source, amount, imageId, originalName)
+
+        MySQL.Async.execute('INSERT INTO printer (image_name, mime_type, image_data) VALUES (@image_name, @mime_type, @image_data)', {
+            ['@image_name'] = tostring(imageId),
+            ['@mime_type'] = mimeType,
+            ['@image_data'] = imageData
+        })
+
+        RemovePlayerMoney(Player, account, TotalBill)
+        TriggerClientEvent('pl_printer:notification', source, Locale("Money_Removed") .. TotalBill, 'success')
     else
-        TriggerClientEvent('pl_printer:notification',source,Locale("not_enough"),'error')
+        TriggerClientEvent('pl_printer:notification', source, Locale("not_enough"), 'error')
     end
 end)
 
@@ -36,33 +66,50 @@ RegisterServerEvent('pl_printer:fetchImageLink')
 AddEventHandler('pl_printer:fetchImageLink', function(imageName,playerSource)
     local hasItem = HasItem(playerSource)
     if not hasItem then return end
-    MySQL.Async.fetchScalar('SELECT image_link FROM printer WHERE image_name = @imageName', {
+
+    if not imageName or imageName == '' then
+        TriggerClientEvent('pl_printer:notification', playerSource, Locale("invalid_image_item"), 'error')
+        return
+    end
+
+    MySQL.Async.fetchAll('SELECT mime_type, image_data FROM printer WHERE image_name = @imageName LIMIT 1', {
         ['@imageName'] = imageName
-    }, function(imageLink)
-        if imageLink then
-            TriggerClientEvent('pl_printer:showImage',playerSource,imageLink)
+    }, function(result)
+        local row = result and result[1]
+
+        if row and row.image_data then
+            local mimeType = row.mime_type or 'image/png'
+            local dataUri = ('data:%s;base64,%s'):format(mimeType, row.image_data)
+            TriggerClientEvent('pl_printer:showImage', playerSource, dataUri)
         else
-            _debug('[DEBUG] '..' No Image Link Found for '..imageName..'')
+            TriggerClientEvent('pl_printer:notification', playerSource, Locale("image_missing"), 'error')
         end
     end)
 end)
 
-function AddItem(source, amount, imageName)
+function AddItem(source, amount, imageId, originalName)
     local src = source
     local info = {
-        id = imageName
+        id = imageId,
+        imageId = imageId,
+        name = originalName,
+        version = 2
     }
     if GetResourceState('qb-inventory') == 'started' then
         if lib.checkDependency('qb-inventory', '2.0.0') then
-            exports['qb-inventory']:AddItem(src,Config.ItemName,amount,false,info)
+            exports['qb-inventory']:AddItem(src, Config.ItemName, amount, false, info)
             TriggerClientEvent('qb-inventory:client:ItemBox', src, QBCore.Shared.Items[Config.ItemName], 'add', amount)
         else
             local Player = getPlayer(src)
-            Player.Functions.AddItem(Config.ItemName, amount,false, info)
+            Player.Functions.AddItem(Config.ItemName, amount, false, info)
             TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[Config.ItemName], "add")
         end
     elseif GetResourceState('ox_inventory') == 'started' then
-        exports.ox_inventory:AddItem(src,Config.ItemName,amount,imageName,false)
+        exports.ox_inventory:AddItem(src, Config.ItemName, amount, {
+            imageId = imageId,
+            name = originalName,
+            version = 2
+        }, false)
     end
 end
 
@@ -71,7 +118,13 @@ AddEventHandler('onServerResourceStart', function()
         exports(Config.ItemName,function (event,item,inventory,slot,data)
             if event == 'usingItem' then
                 local item_metadata = exports.ox_inventory:GetSlot(inventory.id, slot)
-                TriggerEvent('pl_printer:fetchImageLink', item_metadata.metadata.type, inventory.id)
+                local metadata = item_metadata and item_metadata.metadata or {}
+                local imageId = metadata.imageId or metadata.id or metadata.type
+                if imageId then
+                    TriggerEvent('pl_printer:fetchImageLink', imageId, inventory.id)
+                else
+                    TriggerClientEvent('pl_printer:notification', inventory.id, Locale("invalid_image_item"), 'error')
+                end
             end
         end)
     end
