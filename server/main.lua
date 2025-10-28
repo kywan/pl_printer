@@ -75,23 +75,26 @@ AddEventHandler('pl_printer:fetchImageLink', function(imageName,playerSource)
         if imageData then
             TriggerClientEvent('pl_printer:showImage', playerSource, imageData)
         else
-            _debug('[DEBUG] '..' No Image Link Found for '..imageName..'')
+            TriggerClientEvent('pl_printer:notification', playerSource, Locale("image_missing"), 'error')
         end
     end)
 end)
 
-function AddItem(source, amount, imageName)
+function AddItem(source, amount, imageId, originalName)
     local src = source
     local info = {
-        id = imageName
+        id = imageId,
+        imageId = imageId,
+        name = originalName,
+        version = 2
     }
     if GetResourceState('qb-inventory') == 'started' then
         if lib.checkDependency('qb-inventory', '2.0.0') then
-            exports['qb-inventory']:AddItem(src,Config.ItemName,amount,false,info)
+            exports['qb-inventory']:AddItem(src, Config.ItemName, amount, false, info)
             TriggerClientEvent('qb-inventory:client:ItemBox', src, QBCore.Shared.Items[Config.ItemName], 'add', amount)
         else
             local Player = getPlayer(src)
-            Player.Functions.AddItem(Config.ItemName, amount,false, info)
+            Player.Functions.AddItem(Config.ItemName, amount, false, info)
             TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[Config.ItemName], "add")
         end
     elseif GetResourceState('ox_inventory') == 'started' then
