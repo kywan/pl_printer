@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PL Printer</title>
+    <title></title>
     <style>
         * {
             box-sizing: border-box;
@@ -313,6 +313,21 @@
             errorMessage.textContent = '';
         }
 
+        function postNui(eventName, payload) {
+            return fetch(`https://${GetParentResourceName()}/${eventName}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json; charset=UTF-8'
+                },
+                body: JSON.stringify(payload || {})
+            }).then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Request failed');
+                }
+                return response;
+            });
+        }
+
         function showInterface() {
             document.body.style.display = 'block';
         }
@@ -369,13 +384,13 @@
 
             reader.onload = function(loadEvent) {
                 const dataUrl = loadEvent.target.result;
-                axios.post(`https://${GetParentResourceName()}/submitPrint`, {
+                postNui('submitPrint', {
                     imageData: dataUrl,
                     copies: copies,
                     fileName: file.name
                 }).then(function () {
                     hideInterface();
-                    axios.post(`https://${GetParentResourceName()}/hideFrame`, {});
+                    return postNui('hideFrame', {});
                 }).catch(function () {
                     errorMessage.textContent = localeData.uploadFailed || 'Failed to upload image.';
                 });
@@ -386,52 +401,13 @@
 
         cancelButton.addEventListener('click', function() {
             hideInterface();
-            axios.post(`https://${GetParentResourceName()}/hideFrame`, {});
-        });
-
-        uploadForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-            const file = imageInput.files[0];
-            const copies = parseInt(copiesInput.value, 10) || 1;
-
-            if (!file) {
-                errorMessage.textContent = localeData.imageRequired || 'Please select an image before printing.';
-                return;
-            }
-
-            errorMessage.textContent = '';
-            const reader = new FileReader();
-
-            reader.onload = function(loadEvent) {
-                const dataUrl = loadEvent.target.result;
-                axios.post(`https://${GetParentResourceName()}/submitPrint`, {
-                    imageData: dataUrl,
-                    copies: copies,
-                    fileName: file.name
-                }).then(function () {
-                    hideAll();
-                    axios.post(`https://${GetParentResourceName()}/hideFrame`, {});
-                }).catch(function () {
-                    errorMessage.textContent = localeData.uploadFailed || 'Failed to upload image.';
-                });
-            };
-
-            reader.readAsDataURL(file);
-        });
-
-        cancelButton.addEventListener('click', function() {
-            hideAll();
-            axios.post(`https://${GetParentResourceName()}/hideFrame`, {});
+            postNui('hideFrame', {});
         });
 
         document.addEventListener("keydown", function(event) {
             if (event.key === "Escape") {
                 hideInterface();
-                axios.post(`https://${GetParentResourceName()}/hideFrame`, {})
-                .then(function () {
-                })
-                .catch(function () {
-                });
+                postNui('hideFrame', {});
             }
         });
     </script>
