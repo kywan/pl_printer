@@ -16,6 +16,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: rgba(0, 0, 0, 0.75);
             color: #fff;
+            display: none;
         }
 
         #image {
@@ -127,6 +128,18 @@
         }
 
         #image-viewer img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 12px;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
+            display: none;
+        }
+
+        #uploadContainer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             max-width: 90%;
             max-height: 90%;
             border-radius: 12px;
@@ -300,6 +313,15 @@
             errorMessage.textContent = '';
         }
 
+        function showInterface() {
+            document.body.style.display = 'block';
+        }
+
+        function hideInterface() {
+            hideAll();
+            document.body.style.display = 'none';
+        }
+
         window.addEventListener('message', function(event) {
             if (!event.data) {
                 return;
@@ -317,17 +339,54 @@
             }
 
             if (event.data.action === 'openUpload') {
+                showInterface();
                 hideAll();
                 uploadContainer.style.display = 'block';
             } else if (event.data.action === 'show') {
+                showInterface();
                 hideAll();
                 if (event.data.imageData) {
                     imageElement.src = event.data.imageData;
                     imageElement.style.display = 'block';
                 }
             } else if (event.data.action === 'hide') {
-                hideAll();
+                hideInterface();
             }
+        });
+
+        uploadForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const file = imageInput.files[0];
+            const copies = parseInt(copiesInput.value, 10) || 1;
+
+            if (!file) {
+                errorMessage.textContent = localeData.imageRequired || 'Please select an image before printing.';
+                return;
+            }
+
+            errorMessage.textContent = '';
+            const reader = new FileReader();
+
+            reader.onload = function(loadEvent) {
+                const dataUrl = loadEvent.target.result;
+                axios.post(`https://${GetParentResourceName()}/submitPrint`, {
+                    imageData: dataUrl,
+                    copies: copies,
+                    fileName: file.name
+                }).then(function () {
+                    hideInterface();
+                    axios.post(`https://${GetParentResourceName()}/hideFrame`, {});
+                }).catch(function () {
+                    errorMessage.textContent = localeData.uploadFailed || 'Failed to upload image.';
+                });
+            };
+
+            reader.readAsDataURL(file);
+        });
+
+        cancelButton.addEventListener('click', function() {
+            hideInterface();
+            axios.post(`https://${GetParentResourceName()}/hideFrame`, {});
         });
 
         uploadForm.addEventListener('submit', function(event) {
@@ -367,7 +426,7 @@
 
         document.addEventListener("keydown", function(event) {
             if (event.key === "Escape") {
-                hideAll();
+                hideInterface();
                 axios.post(`https://${GetParentResourceName()}/hideFrame`, {})
                 .then(function () {
                 })
