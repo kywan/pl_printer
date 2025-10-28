@@ -14,11 +14,14 @@
             font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        body {
+        html, body {
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background-color: rgba(12, 17, 23, 0.85);
+            background: transparent;
+        }
+
+        body {
             color: #f8f9fa;
             display: none;
         }
@@ -30,7 +33,7 @@
         .hidden {
             display: none !important;
         }
-      
+
         .overlay {
             position: absolute;
             top: 0;
@@ -41,6 +44,7 @@
             align-items: center;
             justify-content: center;
             padding: 2rem;
+            background: rgba(12, 17, 23, 0.85);
         }
 
         .panel {
