@@ -1,6 +1,6 @@
 CREATE TABLE printer (
     id INT AUTO_INCREMENT PRIMARY KEY,
     image_name VARCHAR(255) NOT NULL,
-    image_link VARCHAR(255) NOT NULL
+    image_data LONGTEXT NOT NULL
 );
 

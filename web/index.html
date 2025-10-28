@@ -3,14 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <title></title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            display: none;
         }
+
         #image {
             position: absolute;
             top: 50%;
@@ -18,31 +26,274 @@
             transform: translate(-50%, -50%);
             max-width: 90%;
             max-height: 90%;
+            border-radius: 12px;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
+            display: none;
+        }
+
+        #uploadContainer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 420px;
+            max-width: 90vw;
+            background: rgba(18, 18, 18, 0.95);
+            border-radius: 18px;
+            padding: 28px;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+            display: none;
+        }
+
+        #uploadForm {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        #uploadForm h2 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #c9d1d9;
+        }
+
+        input[type="file"],
+        input[type="number"] {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: #fff;
+            font-size: 15px;
+        }
+
+        input[type="file"]::-webkit-file-upload-button {
+            background: rgba(255, 255, 255, 0.18);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            padding: 8px 12px;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        input[type="file"]::file-selector-button {
+            background: rgba(255, 255, 255, 0.18);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            padding: 8px 12px;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        small.helper {
+            display: block;
+            margin-top: 6px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        #submitButton {
+            background: linear-gradient(135deg, #00d775, #00a86b);
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(0, 215, 117, 0.35);
+        }
+
+        #cancelButton {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            min-height: 18px;
+            font-size: 13px;
+            color: #ff6b6b;
+            margin: -8px 0 0 0;
         }
     </style>
 </head>
 <body>
-    <img id="image" src="" alt="Image" style="display:none;">
+    <div id="uploadContainer">
+        <form id="uploadForm">
+            <h2 id="formTitle"></h2>
+            <div class="form-group">
+                <label for="imageInput" id="imageLabel"></label>
+                <input type="file" id="imageInput" accept="image/*">
+                <small class="helper" id="imageHelper"></small>
+            </div>
+            <div class="form-group">
+                <label for="copiesInput" id="copiesLabel"></label>
+                <input type="number" id="copiesInput" min="1" value="1">
+                <small class="helper" id="copiesHelper"></small>
+            </div>
+            <p class="error-message" id="errorMessage"></p>
+            <div class="buttons">
+                <button type="submit" id="submitButton"></button>
+                <button type="button" id="cancelButton"></button>
+            </div>
+        </form>
+    </div>
+    <img id="image" src="" alt="Image">
     <script>
+        const imageElement = document.getElementById('image');
+        const uploadContainer = document.getElementById('uploadContainer');
+        const uploadForm = document.getElementById('uploadForm');
+        const imageInput = document.getElementById('imageInput');
+        const copiesInput = document.getElementById('copiesInput');
+        const cancelButton = document.getElementById('cancelButton');
+        const errorMessage = document.getElementById('errorMessage');
+        const submitButton = document.getElementById('submitButton');
+        const formTitle = document.getElementById('formTitle');
+        const imageLabel = document.getElementById('imageLabel');
+        const imageHelper = document.getElementById('imageHelper');
+        const copiesLabel = document.getElementById('copiesLabel');
+        const copiesHelper = document.getElementById('copiesHelper');
+
+        let localeData = {
+            imageRequired: 'Please select an image before printing.',
+            uploadFailed: 'Failed to upload image.'
+        };
+
+        function hideAll() {
+            uploadContainer.style.display = 'none';
+            imageElement.style.display = 'none';
+            imageElement.src = '';
+            uploadForm.reset();
+            errorMessage.textContent = '';
+        }
+
+        function postNui(eventName, payload) {
+            return fetch(`https://${GetParentResourceName()}/${eventName}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json; charset=UTF-8'
+                },
+                body: JSON.stringify(payload || {})
+            }).then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Request failed');
+                }
+                return response;
+            });
+        }
+
+        function showInterface() {
+            document.body.style.display = 'block';
+        }
+
+        function hideInterface() {
+            hideAll();
+            document.body.style.display = 'none';
+        }
+
         window.addEventListener('message', function(event) {
-            if (event.data.action === 'show') {
-                document.getElementById('image').src = event.data.imageUrl;
-                document.getElementById('image').style.display = 'block';
+            if (!event.data) {
+                return;
+            }
+
+            if (event.data.locale) {
+                localeData = Object.assign(localeData, event.data.locale);
+                formTitle.textContent = event.data.locale.title || '';
+                imageLabel.textContent = event.data.locale.imageLabel || '';
+                imageHelper.textContent = event.data.locale.imageHelper || '';
+                copiesLabel.textContent = event.data.locale.copiesLabel || '';
+                copiesHelper.textContent = event.data.locale.copiesHelper || '';
+                submitButton.textContent = event.data.locale.submit || 'Print';
+                cancelButton.textContent = event.data.locale.cancel || 'Cancel';
+            }
+
+            if (event.data.action === 'openUpload') {
+                showInterface();
+                hideAll();
+                uploadContainer.style.display = 'block';
+            } else if (event.data.action === 'show') {
+                showInterface();
+                hideAll();
+                if (event.data.imageData) {
+                    imageElement.src = event.data.imageData;
+                    imageElement.style.display = 'block';
+                }
             } else if (event.data.action === 'hide') {
-                document.getElementById('image').style.display = 'none';
+                hideInterface();
             }
         });
 
+        uploadForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const file = imageInput.files[0];
+            const copies = parseInt(copiesInput.value, 10) || 1;
+
+            if (!file) {
+                errorMessage.textContent = localeData.imageRequired || 'Please select an image before printing.';
+                return;
+            }
+
+            errorMessage.textContent = '';
+            const reader = new FileReader();
+
+            reader.onload = function(loadEvent) {
+                const dataUrl = loadEvent.target.result;
+                postNui('submitPrint', {
+                    imageData: dataUrl,
+                    copies: copies,
+                    fileName: file.name
+                }).then(function () {
+                    hideInterface();
+                    return postNui('hideFrame', {});
+                }).catch(function () {
+                    errorMessage.textContent = localeData.uploadFailed || 'Failed to upload image.';
+                });
+            };
+
+            reader.readAsDataURL(file);
+        });
+
+        cancelButton.addEventListener('click', function() {
+            hideInterface();
+            postNui('hideFrame', {});
+        });
+
         document.addEventListener("keydown", function(event) {
-        if (event.key === "Escape") {
-            document.getElementById('image').style.display = 'none';
-            axios.post(`https://${GetParentResourceName()}/hideFrame`, {})
-            .then(function (response) { 
-            })
-            .catch(function (error) {
-            });
-        }
-});
+            if (event.key === "Escape") {
+                hideInterface();
+                postNui('hideFrame', {});
+            }
+        });
     </script>
 </body>
 </html>

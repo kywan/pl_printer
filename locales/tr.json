@@ -1,10 +1,16 @@
 {
     "print_menu": "🖨️ Yazdırma Menüsü",
-    "image_link": "Görsel Bağlantısı",
+    "upload_image": "Görsel yükle",
+    "select_image": "Bilgisayarından bir görsel seç",
     "copies": "Kopya",
-    "image_url": "Görsel URL'sini girin",
     "enter_copies": "Kopya sayısını girin",
+    "print_button": "Yazdır",
+    "cancel": "İptal",
+    "image_required": "Yazdırmadan önce lütfen bir görsel seçin.",
+    "upload_failed": "Görsel yüklenemedi. Lütfen tekrar deneyin.",
     "prints": "Baskılar",
     "Money_Removed": "Bankadan para çekildi: $",
-    "not_enough": "Yetersiz bakiye"
+    "not_enough": "Yetersiz bakiye",
+    "invalid_image_data": "Geçersiz görsel verisi.",
+    "invalid_copies": "Geçersiz kopya sayısı."
 }
