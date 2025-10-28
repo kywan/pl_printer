@@ -2,6 +2,7 @@
 local spawnedObjects = {}
 
 local imageDisplayed = false
+local formOpen = false
 
 RegisterNetEvent('pl_printer:notification')
 AddEventHandler('pl_printer:notification', function(message, type)
@@ -37,66 +38,66 @@ AddEventHandler("pl_printer:showImageQB", function(imageName)
 end)
 
 RegisterNetEvent("pl_printer:showImage")
-AddEventHandler("pl_printer:showImage", function(imageName)
+AddEventHandler("pl_printer:showImage", function(imageData)
     if not imageDisplayed then
+        formOpen = false
         imageDisplayed = true
-        SetNuiFocus(true, true) 
+        SetNuiFocus(true, true)
         SendNUIMessage({
             action = "show",
-            imageUrl = imageName
+            imageData = imageData
         })
         disableControls()
     end
-end) 
+end)
 
 RegisterNUICallback('hideFrame', function(data, cb)
     imageDisplayed = false
+    formOpen = false
     SetNuiFocus(false, false)
     enableControls()
+    cb({})
 end)
 
-function showInputDialog(title, options, submitText)
-    if Config.InputDialog == 'ox_lib' then
-        return lib.inputDialog(title, options)
-    elseif Config.InputDialog == 'lation_ui' then
-        return exports.lation_ui:input({
-            title = title,
-            submitText = submitText,
-            options = options
-        })
+RegisterNUICallback('submitPrint', function(data, cb)
+    local imageData = data and data.imageData
+    local copies = tonumber(data and data.copies)
+    local fileName = data and data.fileName
+
+    if type(imageData) == 'string' and imageData:find('^data:image') then
+        copies = copies and math.floor(copies)
+        if copies and copies > 0 then
+            TriggerServerEvent('pl_printer:insertImageData', imageData, copies, fileName)
+        else
+            _debug('[DEBUG] Invalid copy amount provided')
+        end
+    else
+        _debug('[DEBUG] Invalid image data provided')
     end
-end
+
+    cb({})
+end)
 
 RegisterNetEvent("pl_printer:openprinter", function()
-    local input = showInputDialog(Locale("print_menu"), {
-        {
-            type = 'input',
-            label = Locale("image_link"),
-            description = Locale("image_url"),
-            required = true
-        },
-        {
-            type = 'number',
-            label = Locale("copies"),
-            description = Locale("enter_copies"),
-            required = true,
-            placeholder = '1',
-            icon = 'hashtag'
+    if formOpen or imageDisplayed then return end
+
+    formOpen = true
+    SetNuiFocus(true, true)
+    SendNUIMessage({
+        action = "openUpload",
+        locale = {
+            title = Locale("print_menu"),
+            imageLabel = Locale("upload_image"),
+            imageHelper = Locale("select_image"),
+            copiesLabel = Locale("copies"),
+            copiesHelper = Locale("enter_copies"),
+            submit = Locale("print_button"),
+            cancel = Locale("cancel"),
+            imageRequired = Locale("image_required"),
+            uploadFailed = Locale("upload_failed")
         }
-    }, Locale("submit"))
-
-    if not input then
-        _debug('[DEBUG] No input received')
-        return
-    end
-
-    local imageLink, copies = input[1], input[2]
-
-    if imageLink and copies then
-        TriggerServerEvent('pl_printer:insertImageData', imageLink, copies)
-    else
-        _debug('[DEBUG] Invalid input values')
-    end
+    })
+    disableControls()
 end)
 
 
