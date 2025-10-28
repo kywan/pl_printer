@@ -20,12 +20,17 @@
             overflow: hidden;
             background-color: rgba(12, 17, 23, 0.85);
             color: #f8f9fa;
+            display: none;
+        }
+
+        body.visible {
+            display: block;
         }
 
         .hidden {
             display: none !important;
         }
-
+      
         .overlay {
             position: absolute;
             top: 0;
@@ -189,26 +194,39 @@
             });
         }
 
+        function setBodyVisible(state) {
+            document.body.classList.toggle('visible', state);
+        }
+
+        function updateBodyVisibility() {
+            const shouldShow = !uploadOverlay.classList.contains('hidden') || !imageViewer.classList.contains('hidden');
+            setBodyVisible(shouldShow);
+        }
+
         function showUpload() {
             hideImage();
             clearForm();
             uploadOverlay.classList.remove('hidden');
+            setBodyVisible(true);
         }
 
         function hideUpload() {
             uploadOverlay.classList.add('hidden');
             clearForm();
+            updateBodyVisibility();
         }
 
         function showImage(src) {
             hideUpload();
             imageElement.src = src;
             imageViewer.classList.remove('hidden');
+            setBodyVisible(true);
         }
 
         function hideImage() {
             imageViewer.classList.add('hidden');
             imageElement.src = '';
+            updateBodyVisibility();
         }
 
         function setError(message) {
