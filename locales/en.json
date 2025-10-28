@@ -1,16 +1,16 @@
 {
     "print_menu": "🖨️ Print Menu",
-    "image_link": "Image Link",
+    "upload_image": "Upload Image",
+    "select_image": "Choose an image from your computer",
     "copies": "Copies",
-    "image_url": "Enter the Image URL",
     "enter_copies": "Enter the number of copies",
+    "print_button": "Print",
+    "cancel": "Cancel",
+    "image_required": "Please select an image before printing.",
+    "upload_failed": "Failed to upload the image. Please try again.",
     "prints": "Prints",
     "Money_Removed": "Money removed from bank: $",
     "not_enough": "Not enough money",
-    "invalid_copies": "Enter a valid number of copies",
-    "invalid_file_type": "Unsupported file type",
-    "invalid_file_data": "Image data could not be processed",
-    "file_too_large": "Selected file is too large",
-    "image_missing": "Unable to find the stored image data",
-    "invalid_image_item": "This print no longer has an image attached"
+    "invalid_image_data": "Invalid image data provided.",
+    "invalid_copies": "Invalid number of copies."
 }

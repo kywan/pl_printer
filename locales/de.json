@@ -1,16 +1,16 @@
 {
     "print_menu": "🖨️ Druckmenü",
-    "image_link": "Bildlink",
+    "upload_image": "Bild hochladen",
+    "select_image": "Wähle ein Bild von deinem Computer",
     "copies": "Kopien",
-    "image_url": "Bild-URL eingeben",
     "enter_copies": "Anzahl der Kopien eingeben",
+    "print_button": "Drucken",
+    "cancel": "Abbrechen",
+    "image_required": "Bitte wähle vor dem Drucken ein Bild aus.",
+    "upload_failed": "Bild konnte nicht hochgeladen werden. Bitte versuche es erneut.",
     "prints": "Drucke",
     "Money_Removed": "Geld vom Bankkonto entfernt: $",
     "not_enough": "Nicht genug Geld",
-    "invalid_copies": "Gib eine gültige Anzahl an Kopien ein",
-    "invalid_file_type": "Dateityp wird nicht unterstützt",
-    "invalid_file_data": "Bilddaten konnten nicht verarbeitet werden",
-    "file_too_large": "Die ausgewählte Datei ist zu groß",
-    "image_missing": "Gespeicherte Bilddaten wurden nicht gefunden",
-    "invalid_image_item": "Dieser Ausdruck hat kein Bild mehr verknüpft"
+    "invalid_image_data": "Ungültige Bilddaten.",
+    "invalid_copies": "Ungültige Anzahl an Kopien."
 }

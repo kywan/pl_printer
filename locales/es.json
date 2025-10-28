@@ -1,16 +1,16 @@
 {
     "print_menu": "🖨️ Menú de impresión",
-    "image_link": "Enlace de imagen",
+    "upload_image": "Subir imagen",
+    "select_image": "Elige una imagen de tu ordenador",
     "copies": "Copias",
-    "image_url": "Introduce la URL de la imagen",
     "enter_copies": "Introduce el número de copias",
+    "print_button": "Imprimir",
+    "cancel": "Cancelar",
+    "image_required": "Selecciona una imagen antes de imprimir.",
+    "upload_failed": "No se pudo subir la imagen. Inténtalo de nuevo.",
     "prints": "Impresiones",
     "Money_Removed": "Dinero retirado del banco: $",
     "not_enough": "No hay suficiente dinero",
-    "invalid_copies": "Introduce una cantidad válida de copias",
-    "invalid_file_type": "Tipo de archivo no compatible",
-    "invalid_file_data": "No se pudo procesar la imagen",
-    "file_too_large": "El archivo seleccionado es demasiado grande",
-    "image_missing": "No se encontraron los datos guardados de la imagen",
-    "invalid_image_item": "Esta impresión ya no tiene una imagen vinculada"
+    "invalid_image_data": "Datos de imagen inválidos.",
+    "invalid_copies": "Número de copias inválido."
 }

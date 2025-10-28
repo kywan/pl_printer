@@ -2,15 +2,7 @@
 local spawnedObjects = {}
 
 local imageDisplayed = false
-local uploadOpen = false
-
-local MAX_UPLOAD_SIZE = 2 * 1024 * 1024 -- 2MB default limit
-local ALLOWED_MIME_TYPES = {
-    ['image/png'] = true,
-    ['image/jpeg'] = true,
-    ['image/jpg'] = true,
-    ['image/webp'] = true
-}
+local formOpen = false
 
 RegisterNetEvent('pl_printer:notification')
 AddEventHandler('pl_printer:notification', function(message, type)
@@ -41,13 +33,14 @@ function enableControls()
 end
 
 RegisterNetEvent("pl_printer:showImage")
-AddEventHandler("pl_printer:showImage", function(imageName)
+AddEventHandler("pl_printer:showImage", function(imageData)
     if not imageDisplayed then
+        formOpen = false
         imageDisplayed = true
         SetNuiFocus(true, true)
         SendNUIMessage({
             action = "show",
-            imageUrl = imageName
+            imageData = imageData
         })
         disableControls()
     end
@@ -55,78 +48,51 @@ end)
 
 RegisterNUICallback('hideFrame', function(data, cb)
     imageDisplayed = false
+    formOpen = false
     SetNuiFocus(false, false)
     enableControls()
-    cb({ success = true })
+    cb({})
+end)
+
+RegisterNUICallback('submitPrint', function(data, cb)
+    local imageData = data and data.imageData
+    local copies = tonumber(data and data.copies)
+    local fileName = data and data.fileName
+
+    if type(imageData) == 'string' and imageData:find('^data:image') then
+        copies = copies and math.floor(copies)
+        if copies and copies > 0 then
+            TriggerServerEvent('pl_printer:insertImageData', imageData, copies, fileName)
+        else
+            _debug('[DEBUG] Invalid copy amount provided')
+        end
+    else
+        _debug('[DEBUG] Invalid image data provided')
+    end
+
+    cb({})
 end)
 
 RegisterNetEvent("pl_printer:openprinter", function()
-    if uploadOpen then return end
+    if formOpen or imageDisplayed then return end
 
-    uploadOpen = true
+    formOpen = true
     SetNuiFocus(true, true)
     SendNUIMessage({
-        action = "openUpload"
+        action = "openUpload",
+        locale = {
+            title = Locale("print_menu"),
+            imageLabel = Locale("upload_image"),
+            imageHelper = Locale("select_image"),
+            copiesLabel = Locale("copies"),
+            copiesHelper = Locale("enter_copies"),
+            submit = Locale("print_button"),
+            cancel = Locale("cancel"),
+            imageRequired = Locale("image_required"),
+            uploadFailed = Locale("upload_failed")
+        }
     })
     disableControls()
-end)
-
-
-RegisterNUICallback('closeUpload', function(_, cb)
-    uploadOpen = false
-    SetNuiFocus(false, false)
-    enableControls()
-    SendNUIMessage({ action = "closeUpload" })
-    cb({ success = true })
-end)
-
-RegisterNUICallback('uploadImage', function(data, cb)
-    if type(data) ~= 'table' then
-        cb({ success = false, error = 'invalid_payload' })
-        return
-    end
-
-    local copies = tonumber(data.copies or 0) or 0
-    copies = math.floor(copies)
-    local mimeType = tostring(data.mimeType or '')
-    local base64Data = tostring(data.base64Data or '')
-    local fileSize = tonumber(data.fileSize or 0) or 0
-    local fileName = tostring(data.fileName or '')
-
-    if copies < 1 then
-        TriggerEvent('pl_printer:notification', Locale("invalid_copies"), 'error')
-        cb({ success = false, error = 'invalid_copies' })
-        return
-    end
-
-    if fileSize <= 0 or fileSize > MAX_UPLOAD_SIZE then
-        TriggerEvent('pl_printer:notification', Locale("file_too_large"), 'error')
-        cb({ success = false, error = 'invalid_size' })
-        return
-    end
-
-    if not ALLOWED_MIME_TYPES[mimeType] then
-        TriggerEvent('pl_printer:notification', Locale("invalid_file_type"), 'error')
-        cb({ success = false, error = 'invalid_type' })
-        return
-    end
-
-    if base64Data == '' then
-        TriggerEvent('pl_printer:notification', Locale("invalid_file_data"), 'error')
-        cb({ success = false, error = 'invalid_data' })
-        return
-    end
-
-    local imageId = ('pl_img_%s_%s'):format(os.time(), math.random(1000, 9999))
-
-    TriggerServerEvent('pl_printer:insertImageData', imageId, mimeType, base64Data, copies, fileName)
-
-    uploadOpen = false
-    SetNuiFocus(false, false)
-    enableControls()
-    SendNUIMessage({ action = "closeUpload" })
-
-    cb({ success = true })
 end)
 
 
