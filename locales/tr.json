@@ -6,5 +6,11 @@
     "enter_copies": "Kopya sayısını girin",
     "prints": "Baskılar",
     "Money_Removed": "Bankadan para çekildi: $",
-    "not_enough": "Yetersiz bakiye"
+    "not_enough": "Yetersiz bakiye",
+    "invalid_copies": "Geçerli bir kopya sayısı girin",
+    "invalid_file_type": "Desteklenmeyen dosya türü",
+    "invalid_file_data": "Görsel verileri işlenemedi",
+    "file_too_large": "Seçilen dosya çok büyük",
+    "image_missing": "Kaydedilen görsel verileri bulunamadı",
+    "invalid_image_item": "Bu baskının artık bağlı bir görseli yok"
 }
