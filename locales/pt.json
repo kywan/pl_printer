@@ -6,5 +6,11 @@
     "enter_copies": "Digite o número de cópias",
     "prints": "Impressões",
     "Money_Removed": "Dinheiro removido do banco: $",
-    "not_enough": "Dinheiro insuficiente"
-  }
+    "not_enough": "Dinheiro insuficiente",
+    "invalid_copies": "Informe uma quantidade válida de cópias",
+    "invalid_file_type": "Tipo de arquivo não suportado",
+    "invalid_file_data": "Não foi possível processar a imagem",
+    "file_too_large": "O arquivo selecionado é muito grande",
+    "image_missing": "Não foi possível encontrar os dados da imagem armazenada",
+    "invalid_image_item": "Esta impressão não possui mais uma imagem vinculada"
+}

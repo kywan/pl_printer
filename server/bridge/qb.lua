@@ -42,6 +42,19 @@ end
 
 QBCore.Functions.CreateUseableItem(Config.ItemName, function(source)
     local Player = QBCore.Functions.GetPlayer(source)
-    local item = Player.Functions.GetItemByName(Config.ItemName)
-    TriggerEvent('pl_printer:fetchImageLink',item.info.id,Player.PlayerData.source)
+    local item = Player and Player.Functions.GetItemByName(Config.ItemName)
+
+    if not item or not item.info then
+        TriggerClientEvent('pl_printer:notification', source, Locale("invalid_image_item"), 'error')
+        return
+    end
+
+    local imageId = item.info.imageId or item.info.id
+
+    if not imageId then
+        TriggerClientEvent('pl_printer:notification', source, Locale("invalid_image_item"), 'error')
+        return
+    end
+
+    TriggerEvent('pl_printer:fetchImageLink', imageId, Player.PlayerData.source)
 end)

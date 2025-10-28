@@ -3,46 +3,369 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <title></title>
+    <title>PL Printer</title>
     <style>
-        body {
+        :root {
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        html, body {
             margin: 0;
             padding: 0;
             overflow: hidden;
+            background: transparent;
         }
-        #image {
+
+        body {
+            color: #f8f9fa;
+            display: none;
+        }
+
+        body.visible {
+            display: block;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .overlay {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: rgba(12, 17, 23, 0.85);
+        }
+
+        .panel {
+            background: rgba(20, 27, 35, 0.95);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(88, 105, 128, 0.35);
+        }
+
+        .panel h1 {
+            margin: 0 0 1rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .panel p.description {
+            margin: 0 0 1.5rem;
+            color: #adb5bd;
+        }
+
+        .field {
+            margin-bottom: 1.25rem;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #dfe4ea;
+        }
+
+        .field input[type="file"],
+        .field input[type="number"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(111, 126, 148, 0.35);
+            background: rgba(24, 32, 41, 0.95);
+            color: inherit;
+        }
+
+        .field input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .field input[type="number"]::-webkit-outer-spin-button,
+        .field input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 999px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button.primary {
+            background: linear-gradient(135deg, #4dabf7, #1971c2);
+            color: white;
+            box-shadow: 0 8px 20px rgba(25, 113, 194, 0.35);
+        }
+
+        button.secondary {
+            background: rgba(108, 117, 125, 0.35);
+            color: #f8f9fa;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: progress;
+            box-shadow: none;
+        }
+
+        button:not(:disabled):hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(25, 113, 194, 0.4);
+        }
+
+        .error {
+            color: #ff6b6b;
+            margin-top: 0.5rem;
+            min-height: 1.25rem;
+            font-size: 0.9rem;
+        }
+
+        #image-viewer img {
             max-width: 90%;
             max-height: 90%;
+            border-radius: 12px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
         }
     </style>
 </head>
 <body>
-    <img id="image" src="" alt="Image" style="display:none;">
+    <div id="upload-overlay" class="overlay hidden">
+        <div class="panel">
+            <h1>Select an image</h1>
+            <p class="description">Upload an image from your device and choose how many copies to print.</p>
+            <div class="field">
+                <label for="fileInput">Image file</label>
+                <input id="fileInput" type="file" accept="image/*">
+            </div>
+            <div class="field">
+                <label for="copyInput">Copies</label>
+                <input id="copyInput" type="number" min="1" value="1">
+            </div>
+            <div class="buttons">
+                <button id="cancelButton" class="secondary" type="button">Cancel</button>
+                <button id="uploadButton" class="primary" type="button">Print</button>
+            </div>
+            <div id="errorMessage" class="error"></div>
+        </div>
+    </div>
+
+    <div id="image-viewer" class="overlay hidden">
+        <img id="image" src="" alt="Uploaded image">
+    </div>
+
     <script>
-        window.addEventListener('message', function(event) {
-            if (event.data.action === 'show') {
-                document.getElementById('image').src = event.data.imageUrl;
-                document.getElementById('image').style.display = 'block';
-            } else if (event.data.action === 'hide') {
-                document.getElementById('image').style.display = 'none';
+        const resourceName = typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'nui-frame';
+
+        const uploadOverlay = document.getElementById('upload-overlay');
+        const imageViewer = document.getElementById('image-viewer');
+        const imageElement = document.getElementById('image');
+        const fileInput = document.getElementById('fileInput');
+        const copyInput = document.getElementById('copyInput');
+        const uploadButton = document.getElementById('uploadButton');
+        const cancelButton = document.getElementById('cancelButton');
+        const errorMessage = document.getElementById('errorMessage');
+
+        function postNui(action, data) {
+            return fetch(`https://${resourceName}/${action}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json; charset=UTF-8'
+                },
+                body: JSON.stringify(data || {})
+            });
+        }
+
+        function setBodyVisible(state) {
+            document.body.classList.toggle('visible', state);
+        }
+
+        function updateBodyVisibility() {
+            const shouldShow = !uploadOverlay.classList.contains('hidden') || !imageViewer.classList.contains('hidden');
+            setBodyVisible(shouldShow);
+        }
+
+        function showUpload() {
+            hideImage();
+            clearForm();
+            uploadOverlay.classList.remove('hidden');
+            setBodyVisible(true);
+        }
+
+        function hideUpload() {
+            uploadOverlay.classList.add('hidden');
+            clearForm();
+            updateBodyVisibility();
+        }
+
+        function showImage(src) {
+            hideUpload();
+            imageElement.src = src;
+            imageViewer.classList.remove('hidden');
+            setBodyVisible(true);
+        }
+
+        function hideImage() {
+            imageViewer.classList.add('hidden');
+            imageElement.src = '';
+            updateBodyVisibility();
+        }
+
+        function setError(message) {
+            errorMessage.textContent = message || '';
+        }
+
+        function clearForm() {
+            fileInput.value = '';
+            copyInput.value = '1';
+            setError('');
+            setUploading(false);
+        }
+
+        function setUploading(state) {
+            uploadButton.disabled = state;
+            cancelButton.disabled = state;
+        }
+
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error('failed_to_read'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        uploadButton.addEventListener('click', async () => {
+            const file = fileInput.files[0];
+            const copies = Number(copyInput.value || '0');
+
+            if (!file) {
+                setError('Please select an image to upload.');
+                return;
+            }
+
+            if (copies < 1 || !Number.isFinite(copies)) {
+                setError('Enter a valid number of copies.');
+                return;
+            }
+
+            setError('');
+            setUploading(true);
+
+            try {
+                const dataUrl = await readFileAsDataURL(file);
+                const base64Data = dataUrl.split(',')[1];
+                const mimeMatch = /^data:([^;]+);/.exec(dataUrl);
+                const mimeType = file.type || (mimeMatch && mimeMatch[1]) || 'image/png';
+
+                const response = await postNui('uploadImage', {
+                    fileName: file.name,
+                    mimeType,
+                    base64Data,
+                    fileSize: file.size,
+                    copies
+                });
+
+                let payload = {};
+                if (response.ok) {
+                    try {
+                        payload = await response.json();
+                    } catch (jsonError) {
+                        payload = {};
+                    }
+                }
+
+                if (!response.ok || payload.success === false) {
+                    const errorKey = payload.error || 'upload_failed';
+                    switch (errorKey) {
+                        case 'invalid_copies':
+                            setError('Enter a valid number of copies.');
+                            break;
+                        case 'invalid_type':
+                            setError('Unsupported file type.');
+                            break;
+                        case 'invalid_size':
+                            setError('Selected file is too large.');
+                            break;
+                        case 'invalid_data':
+                            setError('Unable to read the selected file.');
+                            break;
+                        default:
+                            setError('Unable to upload the selected image.');
+                            break;
+                    }
+                    return;
+                }
+
+                hideUpload();
+            } catch (error) {
+                console.error('Image upload failed', error);
+                setError('Failed to read the selected file.');
+            } finally {
+                setUploading(false);
             }
         });
 
-        document.addEventListener("keydown", function(event) {
-        if (event.key === "Escape") {
-            document.getElementById('image').style.display = 'none';
-            axios.post(`https://${GetParentResourceName()}/hideFrame`, {})
-            .then(function (response) { 
-            })
-            .catch(function (error) {
-            });
-        }
-});
+        cancelButton.addEventListener('click', () => {
+            hideUpload();
+            postNui('closeUpload');
+        });
+
+        window.addEventListener('message', (event) => {
+            const { action, imageUrl } = event.data || {};
+
+            switch (action) {
+                case 'show':
+                    showImage(imageUrl);
+                    break;
+                case 'hide':
+                    hideImage();
+                    break;
+                case 'openUpload':
+                    showUpload();
+                    break;
+                case 'closeUpload':
+                    hideUpload();
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                if (!imageViewer.classList.contains('hidden')) {
+                    hideImage();
+                    postNui('hideFrame');
+                } else if (!uploadOverlay.classList.contains('hidden')) {
+                    hideUpload();
+                    postNui('closeUpload');
+                }
+            }
+        });
     </script>
 </body>
 </html>
