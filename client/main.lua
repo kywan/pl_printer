@@ -32,11 +32,6 @@ function enableControls()
     FreezeEntityPosition(PlayerPedId(), false)
 end
 
-RegisterNetEvent("pl_printer:showImageQB")
-AddEventHandler("pl_printer:showImageQB", function(imageName)
-    TriggerServerEvent('pl_printer:fetchImageLink',imageName)
-end)
-
 RegisterNetEvent("pl_printer:showImage")
 AddEventHandler("pl_printer:showImage", function(imageData)
     if not imageDisplayed then
@@ -115,7 +110,7 @@ for _, model in ipairs(Config.PrinterModel) do
             },
             distance = 2
         })
-    elseif GetResourceState('qtarget') == 'started' or GetResourceState('ox_target') == 'started'then
+    elseif GetResourceState('qtarget') == 'started' or GetResourceState('ox_target') == 'started' then
         exports.ox_target:addModel(model, {
             {
                 name = 'printer_interaction',

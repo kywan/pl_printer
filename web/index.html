@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <title></title>
+    <title>PL Printer</title>
     <style>
         * {
             box-sizing: border-box;
@@ -21,6 +20,122 @@
         }
 
         #image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .panel {
+            background: rgba(20, 27, 35, 0.95);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(88, 105, 128, 0.35);
+        }
+
+        .panel h1 {
+            margin: 0 0 1rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .panel p.description {
+            margin: 0 0 1.5rem;
+            color: #adb5bd;
+        }
+
+        .field {
+            margin-bottom: 1.25rem;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #dfe4ea;
+        }
+
+        .field input[type="file"],
+        .field input[type="number"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(111, 126, 148, 0.35);
+            background: rgba(24, 32, 41, 0.95);
+            color: inherit;
+        }
+
+        .field input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .field input[type="number"]::-webkit-outer-spin-button,
+        .field input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 999px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button.primary {
+            background: linear-gradient(135deg, #4dabf7, #1971c2);
+            color: white;
+            box-shadow: 0 8px 20px rgba(25, 113, 194, 0.35);
+        }
+
+        button.secondary {
+            background: rgba(108, 117, 125, 0.35);
+            color: #f8f9fa;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: progress;
+            box-shadow: none;
+        }
+
+        button:not(:disabled):hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(25, 113, 194, 0.4);
+        }
+
+        .error {
+            color: #ff6b6b;
+            margin-top: 0.5rem;
+            min-height: 1.25rem;
+            font-size: 0.9rem;
+        }
+
+        #image-viewer img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 12px;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
+            display: none;
+        }
+
+        #uploadContainer {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -271,6 +386,41 @@
 
         cancelButton.addEventListener('click', function() {
             hideInterface();
+            axios.post(`https://${GetParentResourceName()}/hideFrame`, {});
+        });
+
+        uploadForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const file = imageInput.files[0];
+            const copies = parseInt(copiesInput.value, 10) || 1;
+
+            if (!file) {
+                errorMessage.textContent = localeData.imageRequired || 'Please select an image before printing.';
+                return;
+            }
+
+            errorMessage.textContent = '';
+            const reader = new FileReader();
+
+            reader.onload = function(loadEvent) {
+                const dataUrl = loadEvent.target.result;
+                axios.post(`https://${GetParentResourceName()}/submitPrint`, {
+                    imageData: dataUrl,
+                    copies: copies,
+                    fileName: file.name
+                }).then(function () {
+                    hideAll();
+                    axios.post(`https://${GetParentResourceName()}/hideFrame`, {});
+                }).catch(function () {
+                    errorMessage.textContent = localeData.uploadFailed || 'Failed to upload image.';
+                });
+            };
+
+            reader.readAsDataURL(file);
+        });
+
+        cancelButton.addEventListener('click', function() {
+            hideAll();
             axios.post(`https://${GetParentResourceName()}/hideFrame`, {});
         });
 
