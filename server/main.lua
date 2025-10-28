@@ -98,7 +98,7 @@ function AddItem(source, amount, imageId, originalName)
             TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[Config.ItemName], "add")
         end
     elseif GetResourceState('ox_inventory') == 'started' then
-        exports.ox_inventory:AddItem(src, Config.ItemName, amount, { type = imageName }, false)
+        exports.ox_inventory:AddItem(src, Config.ItemName, amount, { id = imageName }, false)
     end
 end
 
@@ -106,12 +106,17 @@ AddEventHandler('onServerResourceStart', function()
     if GetResourceState('ox_inventory') == 'started' then
         exports(Config.ItemName,function (event,item,inventory,slot,data)
             if event == 'usingItem' then
-                local item_metadata = exports.ox_inventory:GetSlot(inventory.id, slot)
-                local metadata = item_metadata and item_metadata.metadata
+                local metadata
+                if type(slot) == 'table' then
+                    metadata = slot.metadata
+                elseif slot ~= nil then
+                    local slotInfo = exports.ox_inventory:GetSlot(inventory.id, slot)
+                    metadata = slotInfo and slotInfo.metadata
+                end
                 local imageId
 
                 if type(metadata) == 'table' then
-                    imageId = metadata.type or metadata.id or metadata.image_name
+                    imageId = metadata.id or metadata.type or metadata.image_name
                 elseif type(metadata) == 'string' then
                     imageId = metadata
                 end
